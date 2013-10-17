@@ -1,0 +1,191 @@
+<?php
+
+/**
+ * Implements hook_menu().
+ */
+function url_parser_menu() {
+  $items = array();
+
+  $items['url_parser'] = array(
+    'title' => 'URL Parser',
+    'page callback' => 'url_parser_page',
+    'access arguments' => array('use url parser'),
+  );
+  $items['admin/config/url_parser'] = array(
+    'title' => 'Configure URL Parser',
+    'page callback' => 'url_parser_admin_page',
+    'access arguments' => array('use url parser'),
+    'file' => 'url_parser.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+  $items['admin/config/url_parser/config'] = array(
+    'title' => 'Configure URL Parser',
+    'page callback' => 'url_parser_admin_page',
+    'access arguments' => array('config url parser'),
+    'file' => 'url_parser.admin.inc',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  $items['admin/config/url_parser/load_config'] = array(
+    'title' => 'Load URL Parser configuraitons',
+    'page callback' => 'url_parser_admin_load_config',
+    'access arguments' => array('config url parser'),
+    'file' => 'url_parser.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+  $items['admin/config/url_parser/delete/%/%'] = array(
+    'title' => 'Delete URL Parser key',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('url_parser_admin_page_delete',4,5),
+    'access arguments' => array('config url parser'),
+    'file' => 'url_parser.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function url_parser_permission() {
+  $perm = array();
+  $perm['use url parser'] = array(
+    'title' => 'Use URL Parser functionality.',
+  );
+  $perm['config url parser'] = array(
+    'title' => 'Configure URL Parser keys.',
+  );
+  return $perm;
+}
+
+function url_parser_page() {
+  $form = drupal_get_form('url_parser_form');
+  $output = drupal_render($form);
+  $output .= t("<p>Key explanations for Google search is take from here: http://www.rankpanel.com/blog/google-search-parameters</p>");
+  return $output;
+}
+
+function url_parser_form($form, &$form_state) {
+  $form['description'] = array(
+    '#type' => 'markup',
+    '#markup' => t('Paste a URL from a website (such as a google search page) to learn what the different variables mean.'),
+  );
+  $form['url'] = array(
+    '#type' => 'textfield',
+  );
+  $form['submit_button'] = array(
+    '#type' => 'submit',
+    '#value' => t('Parse'),
+  );
+  if(!empty($form_state['result'])) {
+    $form['result'] = array(
+      '#type' => 'markup',
+      '#markup' => $form_state['result'],//TODO: move rendering from submit to here.
+    );
+  }
+  return $form;
+}
+
+function url_parser_form_submit($form, &$form_state) {
+  $url_info = parse_url($form_state['values']['url']);
+  if(!isset($url_info['host'])) {
+    drupal_set_message(t('No host in the given URL. Cannot lookup keys.'),'error');
+    return;
+  }
+
+  if(isset($url_info['query'])) {
+    $variables = _url_parser_split_query($url_info['query']);
+  } elseif(isset($url_info['fragment'])) {
+    $variables = _url_parser_split_query($url_info['fragment']);
+  } else {
+    drupal_set_message(t('No variables in url.'),'error');
+    return;
+  }
+  
+  _url_parser_add_values($url_info['host'],$variables);
+  
+  $known_keys = _url_parser_load_known_keys($url_info['host']);
+  $variables = _url_parser_compare_known_keys($variables,$known_keys);
+  $output = _url_parser_output_explanation($variables);
+  
+  $form_state['result'] = $output;
+  // Rebuild form to return to form page, where result will be outputtet.
+  $form_state['rebuild'] = TRUE;
+}
+
+function _url_parser_compare_known_keys($variables,$known_keys) {
+  $unknown = array();
+  foreach($variables as $key => $variable_info) {
+    if(array_key_exists($key,$known_keys)) {
+      //We know the key, so add the info
+      $variables[$key]['description'] = $known_keys[$key];
+    } else {
+      $unknown[] = $key;
+    }
+  }
+  if($unknown) {
+    drupal_set_message(t('We don"t know the following key(s): @unknown.',array('@unknown' => implode(', ',$unknown))),'warning');
+  }
+  return $variables;
+}
+
+function _url_parser_split_query($query) {
+  $array = explode('&',$query);
+  $return = array();
+  foreach ($array as $pair) {
+    $pair_array = explode('=',$pair);
+    $return[$pair_array[0]] = array(
+      'key' => $pair_array[0],
+      'value' => $pair_array[1],
+      );
+  }
+  return $return;
+}
+
+/**
+ * Connect to db, get all know keys.
+ * Return as array.
+ */
+function _url_parser_load_known_keys($host) {
+  $keys = array();
+  $records = db_select('url_parser_keys','upk')
+    ->fields('upk')
+    ->condition('host',$host,'=')
+    ->execute();
+  foreach($records as $record) {
+    $keys[$record->kay] = $record->description;
+  }
+  return $keys;
+}
+
+function _url_parser_output_explanation($data) {
+  $any = false;
+  $explain = t('<p><b>Explanation</b></p>');
+  $explain .= '<ul>';
+  foreach($data as $key => $value) {
+    if(isset($value['description'])) {
+      $any = true;
+      $explain .= '<li>'.$key .' === '. $value['description'] . '</li>';
+    }
+  }
+  $explain .= '</ul>';
+  return $any? $explain : t('<p>No known keys.</p>');
+}
+
+function _url_parser_add_values($host,$variables) {
+  foreach ($variables as $key => $variable) {
+    try {
+      $query = db_insert('url_parser_data')->fields(array('host','kay','value'));
+      $query->values(array(
+        'host' => $host,
+        'kay' => $key,
+        'value' => $variable['value'],
+      ));
+      $query->execute();
+    } catch(PDOException $e) {
+      if(strpos($e->getMessage(),'Error: SQLSTATE[23000]') !== FALSE) {//Integrety contrainst (record already exists)
+        drupal_set_message(t('Error: %message', array('%message' => $e->getMessage())), 'error');
+      } //Else: record exists, no need to add it.
+    }
+  }
+}

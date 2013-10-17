@@ -1,0 +1,6 @@
+name = URL Parser
+description = "Parses a search URL"
+
+core = 7.x
+php = 5.3
+
