@@ -60,6 +60,7 @@ key you must delete it and define it/upload a file.
 
 ### Usage
 This module must be enabled on a site by a site admin. Here we assume that it has been installed on http://example.com.
+
 1. Go to http://example.com/url_parser.
 2. Paste a URL into the text field. For example `https://www.google.com/search?client=ubuntu&channel=fs&q=clean+all+the+things&ie=utf-8&oe=utf-8`.
 3. Click `Parse`.
@@ -78,17 +79,17 @@ When the page reloads you should see an explanation of the keys and/or a list of
 - Setup demo.
 
 ### Later versions
-[ ] Add handler for if none of the keys are known
-[ ] Create `$_SERVER['HTTP_REFERER']` catch (drupal hook?) module that uses this parser. Can be used for statistics.
-[ ] Log on failed deletion.
-[ ] Allow description to use $key.
-[ ] Maybe: Test for ctools and provide delete confirm in overlay and form submit ajax.
-[ ] Consider extension to include parsing parameters from the links on the search result page.
-[ ] Browser keys (non admin).
-[ ] Find a way to include Google Advanced search tools parameters (See examples/google.ini).
-[ ] Improve/Elaborate on Google explanations.
-[ ] Make url_parser_host in url_parser_admin_form suggest known values.
-[ ] When adding new keys by file check to see if any keys for host are already defined. Make it optional what to do: override or keep existing.
+- Add handler for if none of the keys are known
+- Create `$_SERVER['HTTP_REFERER']` catch (drupal hook?) module that uses this parser. Can be used for statistics.
+- Log on failed deletion.
+- Allow description to use $key.
+- Maybe: Test for ctools and provide delete confirm in overlay and form submit ajax.
+- Consider extension to include parsing parameters from the links on the search result page.
+- Browser keys (non admin).
+- Find a way to include Google Advanced search tools parameters (See examples/google.ini).
+- Improve/Elaborate on Google explanations.
+- Make url_parser_host in url_parser_admin_form suggest known values.
+- When adding new keys by file check to see if any keys for host are already defined. Make it optional what to do: override or keep existing.
 
 # Project Information
 ## Project hosting
