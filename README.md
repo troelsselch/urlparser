@@ -13,7 +13,7 @@ in a URL.
 No demo yet.
 
 ## Bug and feature requests
-Use [issue tracker](troelsselch/urlparser/issues) on github.
+Use [issue tracker](https://github.com/troelsselch/urlparser/issues) on github.
 
 ## Functionality overview.
 - Add keys by host.
@@ -59,30 +59,25 @@ been defined for a host they will **not** be overridden. To replace a
 key you must delete it and define it/upload a file.
 
 ### Usage
-This module must be enabled on a site by a site admin. Here we assume 
-that it has been installed on http://example.com
-1. Go to http://example.com/url_parser
+This module must be enabled on a site by a site admin. Here we assume that it has been installed on http://example.com.
+1. Go to http://example.com/url_parser.
 2. Paste a URL into the text field. For example `https://www.google.com/search?client=ubuntu&channel=fs&q=clean+all+the+things&ie=utf-8&oe=utf-8`.
 3. Click `Parse`.
+
 When the page reloads you should see an explanation of the keys and/or a list of keys that are unknown.
 
 ## Todo
 ### Version 1
-[ ] Document code.
-[ ] Write readme.md
-  [ ] Including user guide.
-  https://help.github.com/articles/github-flavored-markdown
-[ ] Write help functions.
-  https://drupal.org/documentation/modules/help
-[ ] Use rendering functions for admin_page and search result. Other candidates?
-[ ] Rename function names.
-[ ] Review variable names.
-[ ] Link to github project in google.ini
-[ ] Move module to separate git repo.
-[ ] Put on github.
-[ ] Setup demo.
+- Document code.
+- Write help functions.
+  - https://drupal.org/documentation/modules/help
+- Use rendering functions for admin_page and search result. Other candidates?
+- Rename function names.
+- Review variable names.
+- Link to github project in google.ini
+- Setup demo.
 
-### Laster versions
+### Later versions
 [ ] Add handler for if none of the keys are known
 [ ] Create `$_SERVER['HTTP_REFERER']` catch (drupal hook?) module that uses this parser. Can be used for statistics.
 [ ] Log on failed deletion.
